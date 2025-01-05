@@ -1,6 +1,14 @@
-import { Controller, Delete, Get, Patch, Post } from '@nestjs/common';
+import {
+  Controller,
+  Delete,
+  Get,
+  Inject,
+  LoggerService,
+  Patch,
+  Post,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ConfigEnum } from 'src/enum/config.enum';
+import { WINSTON_MODULE_NEST_PROVIDER } from 'nest-winston';
 import { User } from './user.entity';
 import { UserService } from './user.service';
 
@@ -9,10 +17,12 @@ export class UserController {
   constructor(
     private userService: UserService,
     private configService: ConfigService,
-  ) {}
+    @Inject(WINSTON_MODULE_NEST_PROVIDER) private logger: LoggerService,
+  ) {
+    this.logger.log('UserController init');
+  }
   @Get()
   getUsers(): any {
-    console.log(this.configService.get(ConfigEnum.DB_DATABASE));
     return this.userService.findAll();
   }
 
@@ -31,6 +41,8 @@ export class UserController {
       username: 'tomic-update',
       password: '654321',
     } as User;
+
+    throw new Error('Method not implemented.');
 
     return this.userService.update(1, user);
   }
