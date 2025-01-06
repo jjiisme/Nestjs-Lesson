@@ -1,20 +1,58 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { Logs } from './src/logs/logs.entity';
-import { Roles } from './src/roles/roles.entity';
-import { Profile } from './src/user/profile.entity';
-import { User } from './src/user/user.entity';
 
-export default {
-  type: 'mysql',
-  host: '127.0.0.1',
-  port: 3306,
-  username: 'root',
-  password: 'example',
-  database: 'testdb',
-  // 同步本地 schema 与数据库 schema -> 初始化数据库时使用
-  synchronize: true,
-  entities: [User, Profile, Logs, Roles],
-  // logging: process.env.NODE_ENV === 'development' ? true : ['error'],
-  // logging: ['error'],
-  logging: false,
-} as TypeOrmModuleOptions;
+import * as dotenv from 'dotenv';
+import * as fs from 'fs';
+import { DataSource, DataSourceOptions } from 'typeorm';
+import { ConfigEnum } from './src/enum/config.enum';
+
+// 通过环境变量读取不同的.env文件
+export function getEnv(env: string): Record<string, unknown> {
+  if (fs.existsSync(env)) {
+    return dotenv.parse(fs.readFileSync(env));
+  }
+  return {};
+}
+export function getServerConfig() {
+  const defaultConfig = getEnv('.env');
+  const envConfig = getEnv(`.env.${process.env.NODE_ENV || 'development'}`);
+  // configService
+  const config = { ...defaultConfig, ...envConfig };
+  return config;
+}
+
+// 通过dotENV来解析不同的配置
+export function buildConnectionOptions() {
+  const defaultConfig = getEnv('.env');
+  const envConfig = getEnv(`.env.${process.env.NODE_ENV || 'development'}`);
+  // configService
+  const config = { ...defaultConfig, ...envConfig };
+
+  const logFlag = config['LOG_ON'] === 'true';
+
+  const entitiesDir =
+    process.env.NODE_ENV === 'test'
+      ? [__dirname + '/**/*.entity.ts']
+      : [__dirname + '/**/*.entity{.js,.ts}'];
+
+  return {
+    type: config[ConfigEnum.DB_TYPE],
+    host: config[ConfigEnum.DB_HOST],
+    port: config[ConfigEnum.DB_PORT],
+    username: config[ConfigEnum.DB_USERNAME],
+    password: config[ConfigEnum.DB_PASSWORD],
+    database: config[ConfigEnum.DB_DATABASE],
+    entities: entitiesDir,
+    // 同步本地的schema与数据库 -> 初始化的时候去使用
+    synchronize: true,
+    logging: logFlag && process.env.NODE_ENV === 'development',
+    // logging: false,
+  } as TypeOrmModuleOptions;
+}
+
+export const connectionParams = buildConnectionOptions();
+
+export default new DataSource({
+  ...connectionParams,
+  migrations: ['src/migrations/**'],
+  subscribers: [],
+} as DataSourceOptions);
