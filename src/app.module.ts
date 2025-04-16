@@ -3,7 +3,6 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import * as dotenv from 'dotenv';
 import * as Joi from 'joi';
-import 'winston-daily-rotate-file';
 import { connectionParams } from '../ormconfig';
 import { LogsModule } from './logs/logs.module';
 import { RolesController } from './roles/roles.controller';
@@ -11,6 +10,9 @@ import { RolesModule } from './roles/roles.module';
 import { RolesService } from './roles/roles.service';
 import { UserModule } from './user/user.module';
 
+// 	•	providers：告诉 Nest 这个模块内部可以用哪些服务（注入用的）。
+//	•	exports：告诉 Nest 这个模块对外暴露了哪些服务，别的模块引入我时能用哪些服务。
+//  如果使用了 @Global() 装饰器，那么这个模块就变成了 全局模块（global module），它 exports 出来的东西会在整个应用中自动可用，其他模块不需要显式 import 也能用！
 @Global()
 @Module({
   imports: [

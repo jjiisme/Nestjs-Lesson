@@ -22,6 +22,7 @@ export class Profile {
   address: string;
 
   @OneToOne(() => User)
+  // @JoinColumn({name: 'user_id'}) 可以这样设置字段名，不设置默认是 userId
   @JoinColumn()
   user: User;
 }

@@ -1,3 +1,4 @@
+// for typeorm-cli
 import AppDataSource from '../ormconfig';
 import { User } from './user/user.entity';
 
